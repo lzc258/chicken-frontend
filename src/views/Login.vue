@@ -175,38 +175,140 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
-  background-color: #f5f5f5;
+  width: 100%;
+  min-height: 100%;
+  padding: 32px 20px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at top, rgba(93, 132, 214, 0.28), transparent 38%),
+    linear-gradient(180deg, #12213c 0%, #0a1425 100%);
 }
+
 .login-card {
   width: 360px;
-  padding: 20px;
+  max-width: 100%;
+  padding: 24px;
   text-align: center;
+  border-radius: 18px;
+  background: rgba(12, 22, 42, 0.88);
+  border: 1px solid rgba(154, 181, 255, 0.22);
+  box-shadow: 0 24px 60px rgba(3, 8, 20, 0.42);
 }
+
+.login-card :deep(.el-card__body) {
+  padding: 0;
+  background: transparent;
+}
+
 .title {
   margin-bottom: 20px;
+  color: #eef4ff;
 }
+
 .form {
   text-align: left;
 }
+
 .mode-switch {
   width: 100%;
   display: flex;
 }
+
+.mode-switch :deep(.el-radio-button) {
+  flex: 1;
+}
+
 .mode-switch :deep(.el-radio-button),
 .mode-switch :deep(.el-radio-button__inner) {
   width: 100%;
 }
+
+.mode-switch :deep(.el-radio-button__inner) {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(154, 181, 255, 0.2);
+  color: #c9dbff;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.mode-switch :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background: #3f67c4;
+  border-color: #3f67c4;
+  box-shadow: none !important;
+  color: #fff;
+}
+
+.mode-switch :deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-left-color: rgba(154, 181, 255, 0.2);
+}
+
+.mode-switch :deep(.el-radio-button__inner:hover) {
+  color: #eef4ff;
+  border-color: #5f86de;
+}
+
+.mode-switch :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner:hover) {
+  border-color: #5f86de;
+}
+
+.mode-switch :deep(.el-radio-button.is-active .el-radio-button__inner) {
+  box-shadow: none !important;
+}
+
+.mode-switch :deep(.el-radio-button__original-radio:focus-visible + .el-radio-button__inner) {
+  outline: none !important;
+  box-shadow: none !important;
+  border-left-color: rgba(154, 181, 255, 0.2);
+}
+
+.mode-switch :deep(.el-radio-button:not(:first-child) .el-radio-button__inner) {
+  margin-left: -1px;
+}
+
+.mode-switch :deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-right-color: rgba(154, 181, 255, 0.2);
+}
+
+.form :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(154, 181, 255, 0.18);
+}
+
+.form :deep(.el-input__inner) {
+  color: #eef4ff;
+}
+
+.form :deep(.el-input__inner::placeholder) {
+  color: #8ea8d8;
+}
+
 .code-row {
   display: flex;
   gap: 10px;
   width: 100%;
 }
+
+.code-row .el-button {
+  border-color: rgba(154, 181, 255, 0.28);
+  background: rgba(63, 103, 196, 0.2);
+  color: #dbe7ff;
+}
+
 .code-row .el-input {
   flex: 1;
 }
+
 .links {
   margin-top: 10px;
   text-align: right;
+}
+
+.links a {
+  color: #abc8ff;
+  text-decoration: none;
+}
+
+.links a:hover {
+  color: #eef4ff;
 }
 </style>

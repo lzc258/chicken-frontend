@@ -3,7 +3,19 @@
     <main>
       <router-view />
     </main>
-
+    <footer class="site-footer">
+      <div class="footer-meta">
+        <p class="copyright-text">{{ copyrightText }}</p>
+        <a
+          class="record-link"
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {{ icpRecord }}
+        </a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -15,6 +27,8 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 const { isLoggedIn, logout } = useAuth()
+const icpRecord = '浙ICP备2026018189号-1'
+const copyrightText = '© 2026 chicken666nb.tech网站．版权所有'
 
 const showLogout = computed(() => {
   return isLoggedIn.value && route.meta.requiresAuth
@@ -88,9 +102,52 @@ html, body, #app {
 }
 
 main {
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   position: relative;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 20px 18px;
+  background: linear-gradient(180deg, #12213c 0%, #0b1426 100%);
+  border-top: 1px solid rgba(154, 181, 255, 0.18);
+  box-shadow: 0 -10px 24px rgba(3, 8, 20, 0.22);
+  box-sizing: border-box;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.copyright-text {
+  margin: 0;
+  color: #d7e4ff;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.record-link {
+  color: #abc8ff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.record-link:hover {
+  color: #eef4ff;
+  text-decoration: underline;
 }
 
 .global-logout-btn {

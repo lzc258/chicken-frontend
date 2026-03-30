@@ -176,6 +176,12 @@ h1 {
   margin-bottom: 30px;
 }
 
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2.7em;
+  }
+}
+
 .stage {
   position: relative;
   z-index: 2;
@@ -273,4 +279,5 @@ button:hover {
       rotate(var(--rotate));
   }
 }
+
 </style>

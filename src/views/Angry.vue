@@ -63,6 +63,8 @@ const replayVideo = () => {
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -86,12 +88,14 @@ h1 {
 }
 
 video {
+  display: block;
   max-width: 90%;
   width: 600px;
   border: 5px solid #ff4500;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(255,69,0,0.6);
   margin-top: 20px;
+  box-sizing: border-box;
 }
 
 .controls {
@@ -128,11 +132,18 @@ button:hover {
     font-size: 2rem;
   }
 
-  video, img {
-    max-width: 100vw;
+  video {
+    width: 100%;
+    max-width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
+  }
+
+  h1 {
+    width: 100%;
+    text-align: center;
+    word-break: break-word;
   }
 
   h1, h2, h3, h4 {

@@ -1,7 +1,7 @@
 <template>
   <div class="birthday-container">
     <div class="birthday-content">
-      <h1 class="birthday-title">🎉 zzwwjj生日快乐！🎂</h1>
+      <h1 class="birthday-title">🎉 xxx生日快乐！🎂</h1>
       <p class="birthday-message">祝你生日快乐，生活甜蜜如蜜！</p>
 
       <div class="birthday-song">
