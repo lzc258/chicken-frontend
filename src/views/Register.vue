@@ -175,31 +175,78 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
-  background-color: #f5f5f5;
+  width: 100%;
+  min-height: 100%;
+  padding: 32px 20px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at top, rgba(93, 132, 214, 0.28), transparent 38%),
+    linear-gradient(180deg, #12213c 0%, #0a1425 100%);
 }
+
 .register-card {
   width: 360px;
-  padding: 20px;
+  max-width: 100%;
+  padding: 24px;
   text-align: center;
+  border-radius: 18px;
+  background: rgba(12, 22, 42, 0.88);
+  border: 1px solid rgba(154, 181, 255, 0.22);
+  box-shadow: 0 24px 60px rgba(3, 8, 20, 0.42);
 }
+
+.register-card :deep(.el-card__body) {
+  padding: 0;
+  background: transparent;
+}
+
 .title {
   margin-bottom: 20px;
+  color: #eef4ff;
 }
+
 .form {
   text-align: left;
 }
+
+.form :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(154, 181, 255, 0.18);
+}
+
+.form :deep(.el-input__inner) {
+  color: #eef4ff;
+}
+
+.form :deep(.el-input__inner::placeholder) {
+  color: #8ea8d8;
+}
+
 .code-row {
   display: flex;
   gap: 10px;
   width: 100%;
 }
+
 .code-button {
   flex-shrink: 0;
+  border-color: rgba(154, 181, 255, 0.28);
+  background: rgba(63, 103, 196, 0.2);
+  color: #dbe7ff;
 }
+
 .links {
   margin-top: 10px;
   text-align: center;
   font-size: 13px;
+}
+
+.links a {
+  color: #abc8ff;
+  text-decoration: none;
+}
+
+.links a:hover {
+  color: #eef4ff;
 }
 </style>
