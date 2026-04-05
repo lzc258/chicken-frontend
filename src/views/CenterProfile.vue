@@ -172,6 +172,66 @@
         </div>
       </el-form-item>
 
+      <el-form-item label="密码">
+        <div class="input-with-btn password-field-row">
+          <div class="password-edit-group">
+            <template v-if="editState.password">
+              <el-input
+                v-model="passwordForm.currentPassword"
+                type="password"
+                show-password
+                placeholder="输入当前密码"
+              />
+              <el-input
+                v-model="passwordForm.newPassword"
+                type="password"
+                show-password
+                placeholder="输入新密码"
+              />
+              <el-input
+                v-model="passwordForm.confirmPassword"
+                type="password"
+                show-password
+                placeholder="确认新密码"
+                @keyup.enter="updateField('password')"
+              />
+            </template>
+
+            <el-input
+              v-else
+              model-value="********"
+              disabled
+            />
+          </div>
+
+          <el-button
+            v-if="!editState.password"
+            size="small"
+            type="primary"
+            @click="enterEdit('password')"
+          >
+            修改
+          </el-button>
+
+          <template v-else>
+            <el-button
+              size="small"
+              type="success"
+              @click="updateField('password')"
+            >
+              保存
+            </el-button>
+
+            <el-button
+              size="small"
+              @click="cancelEdit('password')"
+            >
+              取消
+            </el-button>
+          </template>
+        </div>
+      </el-form-item>
+
     </el-form>
     <div class="logout-row">
       <el-button type="danger" @click="handleLogout" class="logout-btn">退出登录</el-button>
@@ -201,6 +261,13 @@ const editState = reactive({
   email: false,
   phone: false,
   bio: false,
+  password: false,
+})
+
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
 })
 
 const emailVerification = reactive({
@@ -235,19 +302,33 @@ const startEmailCountdown = () => {
 
 // 进入编辑
 const enterEdit = (field) => {
-  backupProfile[field] = localProfile[field]
+  if (field !== 'password') {
+    backupProfile[field] = localProfile[field]
+  }
   editState[field] = true
   if (field === 'email') {
     emailVerification.code = ''
+  }
+  if (field === 'password') {
+    passwordForm.currentPassword = ''
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
   }
 }
 
 // 取消编辑
 const cancelEdit = (field) => {
-  localProfile[field] = backupProfile[field]
+  if (field !== 'password') {
+    localProfile[field] = backupProfile[field]
+  }
   editState[field] = false
   if (field === 'email') {
     emailVerification.code = ''
+  }
+  if (field === 'password') {
+    passwordForm.currentPassword = ''
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
   }
 }
 
@@ -303,6 +384,17 @@ const updateField = async (field) => {
       }
       body.email = localProfile.email
       body.code = emailVerification.code
+    } else if (field === 'password') {
+      if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+        ElMessage.error('请完整填写密码信息')
+        return
+      }
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        ElMessage.error('两次输入的新密码不一致')
+        return
+      }
+      body.current_password = passwordForm.currentPassword
+      body.new_password = passwordForm.newPassword
     } else {
       body[field] = localProfile[field]
     }
@@ -318,15 +410,23 @@ const updateField = async (field) => {
     if (!res.ok) throw new Error(data.error || data.message || '更新失败')
     editState[field] = false
     // 保存成功后同步到全局 profile
-    profile[field] = localProfile[field]
+    if (field !== 'password') {
+      profile[field] = localProfile[field]
+    }
     if (field === 'email') {
       emailVerification.code = ''
+    }
+    if (field === 'password') {
+      passwordForm.currentPassword = ''
+      passwordForm.newPassword = ''
+      passwordForm.confirmPassword = ''
     }
     const labelMap = {
       username: '用户名',
       email: '邮箱',
       phone: '手机号',
       bio: '简介',
+      password: '密码',
     }
     ElMessage.success(`${labelMap[field]}已更新`)
   } catch (e) {
@@ -387,6 +487,14 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+.password-edit-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .email-code-row {
   display: flex;
   gap: 10px;
@@ -395,6 +503,10 @@ onBeforeUnmount(() => {
 
 .email-code-row .el-input {
   flex: 1;
+}
+
+.password-field-row {
+  align-items: flex-start;
 }
 
 /* textarea 也要撑满 */

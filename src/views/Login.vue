@@ -30,10 +30,59 @@
           <el-button type="primary" @click="loginHandler" style="width: 100%;">登录</el-button>
         </el-form-item>
         <div class="links">
+          <el-button link type="primary" class="text-link" @click="openResetDialog">忘记密码？</el-button>
           <router-link to="/register">还没有账号？去注册</router-link>
         </div>
       </el-form>
     </el-card>
+
+    <el-dialog
+      v-model="resetDialogVisible"
+      title="重置密码"
+      width="420px"
+      destroy-on-close
+      class="reset-dialog"
+    >
+      <el-form :model="resetForm" class="form">
+        <el-form-item>
+          <el-input v-model="resetForm.identifier" placeholder="输入邮箱" />
+        </el-form-item>
+        <el-form-item>
+          <div class="code-row">
+            <el-input v-model="resetForm.code" placeholder="邮箱验证码" />
+            <el-button
+              :disabled="sendingResetCode || resetCountdown > 0"
+              @click="sendResetCode"
+            >
+              {{ resetCountdown > 0 ? `${resetCountdown}s后重发` : '发送验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+        <el-form-item>
+          <el-input
+            v-model="resetForm.password"
+            type="password"
+            show-password
+            placeholder="新密码"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-input
+            v-model="resetForm.confirmPassword"
+            type="password"
+            show-password
+            placeholder="确认新密码"
+            @keyup.enter="resetPassword"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="resetDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="resetPassword">确认修改</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -57,6 +106,17 @@ const loginMode = ref('password')
 const sendingCode = ref(false)
 const countdown = ref(0)
 let countdownTimer = null
+const resetDialogVisible = ref(false)
+const sendingResetCode = ref(false)
+const resetCountdown = ref(0)
+let resetCountdownTimer = null
+
+const resetForm = reactive({
+  identifier: '',
+  code: '',
+  password: '',
+  confirmPassword: ''
+})
 
 const isValidIdentifier = (value) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -73,6 +133,19 @@ const startCountdown = () => {
       return
     }
     countdown.value -= 1
+  }, 1000)
+}
+
+const startResetCountdown = () => {
+  resetCountdown.value = 60
+  resetCountdownTimer = window.setInterval(() => {
+    if (resetCountdown.value <= 1) {
+      resetCountdown.value = 0
+      window.clearInterval(resetCountdownTimer)
+      resetCountdownTimer = null
+      return
+    }
+    resetCountdown.value -= 1
   }, 1000)
 }
 
@@ -112,6 +185,86 @@ const sendCode = async () => {
     ElMessage.error(err.message || '发送验证码失败')
   } finally {
     sendingCode.value = false
+  }
+}
+
+const openResetDialog = () => {
+  resetForm.identifier = form.identifier
+  resetForm.code = ''
+  resetForm.password = ''
+  resetForm.confirmPassword = ''
+  resetDialogVisible.value = true
+}
+
+const sendResetCode = async () => {
+  if (!resetForm.identifier) {
+    ElMessage.error('请输入邮箱')
+    return
+  }
+  if (!isValidIdentifier(resetForm.identifier)) {
+    ElMessage.error('请输入有效的邮箱')
+    return
+  }
+
+  sendingResetCode.value = true
+  try {
+    const res = await fetch('/chicken-api/password/send-reset-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: resetForm.identifier })
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || data.message || '发送验证码失败')
+    }
+
+    ElMessage.success(data.message || '验证码已发送')
+    startResetCountdown()
+  } catch (err) {
+    ElMessage.error(err.message || '发送验证码失败')
+  } finally {
+    sendingResetCode.value = false
+  }
+}
+
+const resetPassword = async () => {
+  if (!resetForm.identifier || !resetForm.code || !resetForm.password || !resetForm.confirmPassword) {
+    ElMessage.error('请完整填写重置信息')
+    return
+  }
+  if (!isValidIdentifier(resetForm.identifier)) {
+    ElMessage.error('请输入有效的邮箱')
+    return
+  }
+  if (resetForm.password !== resetForm.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致')
+    return
+  }
+
+  try {
+    const res = await fetch('/chicken-api/password/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identifier: resetForm.identifier,
+        code: resetForm.code,
+        password: resetForm.password
+      })
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || data.message || '重置密码失败')
+    }
+
+    form.identifier = resetForm.identifier
+    form.password = ''
+    form.code = ''
+    resetDialogVisible.value = false
+    ElMessage.success(data.message || '密码重置成功，请重新登录')
+  } catch (err) {
+    ElMessage.error(err.message || '重置密码失败')
   }
 }
 
@@ -167,6 +320,9 @@ onBeforeUnmount(() => {
   if (countdownTimer) {
     window.clearInterval(countdownTimer)
   }
+  if (resetCountdownTimer) {
+    window.clearInterval(resetCountdownTimer)
+  }
 })
 </script>
 
@@ -198,6 +354,56 @@ onBeforeUnmount(() => {
 .login-card :deep(.el-card__body) {
   padding: 0;
   background: transparent;
+}
+
+.reset-dialog :deep(.el-dialog) {
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(93, 132, 214, 0.22), transparent 42%),
+    linear-gradient(180deg, rgba(18, 33, 60, 0.98) 0%, rgba(10, 20, 37, 0.98) 100%);
+  border: 1px solid rgba(154, 181, 255, 0.22);
+  box-shadow: 0 24px 60px rgba(3, 8, 20, 0.46);
+  backdrop-filter: blur(14px);
+}
+
+.reset-dialog :deep(.el-overlay-dialog) {
+  backdrop-filter: blur(8px);
+}
+
+.reset-dialog :deep(.el-dialog__header) {
+  margin: 0;
+  padding: 22px 24px 12px;
+  border-bottom: 1px solid rgba(154, 181, 255, 0.14);
+}
+
+.reset-dialog :deep(.el-dialog__title) {
+  color: #eef4ff;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.reset-dialog :deep(.el-dialog__headerbtn) {
+  top: 18px;
+  right: 18px;
+}
+
+.reset-dialog :deep(.el-dialog__close) {
+  color: #9fb7e8;
+}
+
+.reset-dialog :deep(.el-dialog__headerbtn:hover .el-dialog__close) {
+  color: #eef4ff;
+}
+
+.reset-dialog :deep(.el-dialog__body) {
+  padding: 20px 24px 12px;
+}
+
+.reset-dialog :deep(.el-dialog__footer) {
+  padding: 8px 24px 24px;
+  border-top: 1px solid rgba(154, 181, 255, 0.12);
 }
 
 .title {
@@ -294,21 +500,148 @@ onBeforeUnmount(() => {
   color: #dbe7ff;
 }
 
+.reset-dialog .code-row .el-button {
+  background: rgba(63, 103, 196, 0.26);
+}
+
 .code-row .el-input {
   flex: 1;
 }
 
 .links {
   margin-top: 10px;
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-.links a {
+.links a,
+.text-link {
   color: #abc8ff;
   text-decoration: none;
 }
 
-.links a:hover {
+.links a:hover,
+.text-link:hover {
   color: #eef4ff;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-footer :deep(.el-button) {
+  border-radius: 12px;
+  padding: 10px 18px;
+}
+
+.dialog-footer :deep(.el-button:not(.el-button--primary)) {
+  border-color: rgba(154, 181, 255, 0.24);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d7e4ff;
+}
+
+.dialog-footer :deep(.el-button:not(.el-button--primary):hover) {
+  border-color: #5f86de;
+  color: #eef4ff;
+}
+
+.dialog-footer :deep(.el-button--primary) {
+  border-color: #3f67c4;
+  background: linear-gradient(135deg, #4d78da 0%, #3158af 100%);
+}
+
+.dialog-footer :deep(.el-button--primary:hover) {
+  border-color: #5f86de;
+  background: linear-gradient(135deg, #5b84e2 0%, #3b63bc 100%);
+}
+</style>
+
+<style>
+.el-overlay:has(.el-dialog.reset-dialog) {
+  background: rgba(4, 10, 24, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.el-overlay-dialog:has(.el-dialog.reset-dialog) {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.el-dialog.reset-dialog {
+  --el-dialog-bg-color: #0f1c33;
+  --el-bg-color-overlay: #0f1c33;
+  --el-box-shadow: 0 24px 60px rgba(3, 8, 20, 0.46);
+  border-radius: 22px;
+  overflow: hidden;
+  padding: 0 !important;
+  background:
+    radial-gradient(circle at top, rgba(93, 132, 214, 0.22), transparent 42%),
+    linear-gradient(180deg, rgba(18, 33, 60, 0.98) 0%, rgba(10, 20, 37, 0.98) 100%) !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 24px 60px rgba(3, 8, 20, 0.46) !important;
+  background-clip: padding-box;
+}
+
+.el-dialog.reset-dialog::before,
+.el-dialog.reset-dialog::after,
+.el-overlay-dialog:has(.el-dialog.reset-dialog)::before,
+.el-overlay-dialog:has(.el-dialog.reset-dialog)::after {
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.el-dialog.reset-dialog .el-dialog__header {
+  margin: 0;
+  padding: 22px 24px 12px;
+  border-bottom: 1px solid rgba(154, 181, 255, 0.14);
+  background: transparent !important;
+}
+
+.el-dialog.reset-dialog .el-dialog__title {
+  color: #eef4ff;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.el-dialog.reset-dialog .el-dialog__headerbtn {
+  top: 18px;
+  right: 18px;
+}
+
+.el-dialog.reset-dialog .el-dialog__close {
+  color: #9fb7e8;
+}
+
+.el-dialog.reset-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+  color: #eef4ff;
+}
+
+.el-dialog.reset-dialog .el-dialog__body {
+  padding: 20px 24px 12px;
+  background: transparent !important;
+  color: #dbe7ff;
+}
+
+.el-dialog.reset-dialog .el-dialog__footer {
+  padding: 8px 24px 24px;
+  border-top: 1px solid rgba(154, 181, 255, 0.12);
+  background: transparent !important;
+}
+
+.el-overlay-dialog:has(.el-dialog.reset-dialog),
+.el-dialog.reset-dialog,
+.el-dialog.reset-dialog .el-dialog__header,
+.el-dialog.reset-dialog .el-dialog__body,
+.el-dialog.reset-dialog .el-dialog__footer {
+  background-color: #0f1c33 !important;
 }
 </style>
